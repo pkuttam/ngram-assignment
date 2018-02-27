@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb  8 16:52:55 2018
+Created on Thu Feb 20 16:52:55 2018
 
 @author: pk.uttam
 """
@@ -30,7 +30,7 @@ select_test = "b"
 sentnce_g = gutenberg.sents()
 sentnce_b = brown.sents()
 
-# sentence normalization 1 with start S and end E tag augmentation
+# sentence normalization with start S and end E tag augmentation
 
 # for gutenberg dataset
 sents_g = [];
@@ -74,6 +74,7 @@ del brown
 del sentnce_g
 del sentnce_b
 
+# gutenberg and brown dataset
 train_sents_gb = train_sents_b + train_sents_g
 test_sents_gb = test_sents_b + test_sents_g
 
@@ -98,7 +99,7 @@ else:
 train_words_g = list(itertools.chain.from_iterable(train_sents_g))
 ngram_1_g = {}
 
-# gutenberg uni-gram freq count
+# uni-gram freq count
 for word in train_words_g:
     key = word
     if key in ngram_1_g:
@@ -107,7 +108,7 @@ for word in train_words_g:
         ngram_1_g[key]=1
 
 # In[]
-## UNK tag
+## UNK tag augmentation
 max_freq = 1
 
 key_ngram_1_g = list(ngram_1_g.keys())
@@ -124,7 +125,7 @@ for word in key_ngram_1_g:
 
 
 # In[]
-# gutenberg sentence augmentation/normalization
+#  sentence augmentation/normalization
 
 train_sents_g_aug = []
 for sents in train_sents_g:
@@ -134,7 +135,7 @@ for sents in train_sents_g:
 
 
 # In[]
-# Bigram count for gutenberg
+# Bigram count 
 ngram_2_g_aug={}
 for sents in train_sents_g_aug:
     length = len(sents)
@@ -146,7 +147,7 @@ for sents in train_sents_g_aug:
             ngram_2_g_aug[key] = 1
 
 # In[]
-# trigram count for gutenberg
+# trigram count 
 ngram_3_g_aug={}
 for sents in train_sents_g_aug:
     length = len(sents)
@@ -172,7 +173,7 @@ keys_ngram_3_g_aug =list( ngram_3_g_aug.keys())
 
 # In[]
 
-# test data gutenberg sentence augmentation/normalization
+# test data  sentence augmentation/normalization
 
 test_sents_g_aug = []
 for sents in test_sents_g:
@@ -234,7 +235,7 @@ for sents in test_sents_g_aug:
 
 
 ppxty_1_g =np.exp(-logP_1_g/comb_total)
-print("unigram perplexity = "+ str(np.floor(ppxty_1_g)))
+#print("unigram perplexity = "+ str(np.floor(ppxty_1_g)))
 
 
 
@@ -320,6 +321,13 @@ for key in P_KN_2_g:
     if key[0]==start_ws[0]:
         key_bi.append(key[1])
         val_bi.append(P_KN_2_g[key])
+if not len(val_bi) ==0:
+    amx_val = np.argmax(val_bi)
+    start_ws.append(key_bi[amx_val])
+else:
+    print("word doesn't exit. selecting start word as i")
+    start_ws = ["i","am"]
+
 amx_val = np.argmax(val_bi)
 start_ws.append(key_bi[amx_val])
         
@@ -344,6 +352,9 @@ while(True):
         if (keys_temp[i][0] == start_ws[0] ) & (keys_temp[i][1] == start_ws[1] ):
             key_sel.append(i)
             val_sel.append(val_temp[i])
+    if len(val_sel)==0:
+        print("trigram pair for this bigram doesn't exist")
+        break;
     ind_max = key_sel[np.argmax(val_sel)]
     pred_word = keys_temp[ind_max][2]
     gen_sent.append(pred_word)
