@@ -241,7 +241,7 @@ ppxty_1_g =np.exp(-logP_1_g/comb_total)
 
 # In[]
     
-# bigram perplexity on gutenberg test data
+# bigram perplexity test data
 logP_2_g = 0;
 comb_total = 0;
 for sents in test_sents_g_aug:
