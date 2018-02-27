@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 
+# python 3.6
 # -*- coding: utf-8 -*-
 """
 Created on Thu Feb  7 10:01:23 2018
@@ -19,10 +20,10 @@ from nltk.corpus import brown
 # For only gutenberg as train data-> select select_train = "g"
 # For only brown as train data-> select select_train = "b"
 # For gutenberg and brown as train data-> select select_train = "gb"
-select_train = "b"
+select_train = "gb"
 # For gutenberg as train data-> select select_train = "g"
 # For brown as train data-> select select_train = "b"
-select_test = "b"
+select_test = "g"
 
 
 # In[]
@@ -204,7 +205,7 @@ for i in range(0,n_key_1_g_aug):
 
 # In[]
 # add-K smoothing constant
-k = 0.001;
+
 # probability ngram-3 with add-K smoothing
 n_key_3_g_aug = len(keys_ngram_3_g_aug) 
 p_key_3_g_aug= {}
@@ -309,7 +310,14 @@ start_ws_old=start_ws;
 gen_sent = []
 gen_sent.append(start_ws[0])
 gen_sent.append(start_ws[1])
-keys_temp =list( p_key_3_g_aug.keys())
+
+keys_temp1 =list( p_key_3_g_aug.keys())
+keys_temp=[]
+for key in keys_temp1:
+    if not ((key[0]=='UNK') | (key[1]=='UNK') | (key[2]=='UNK')):
+        keys_temp.append(key)
+
+
 val_temp = []
 for key in keys_temp:
     val_temp.append(p_key_3_g_aug[key])
