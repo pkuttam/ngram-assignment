@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 20 16:52:55 2018
+Created on Thu Feb  8 16:52:55 2018
 
 @author: pk.uttam
 """
@@ -90,6 +90,7 @@ else:
 if select_test =="g":
     test_sents_g = test_sents_g
 elif select_test=="b":
+    del test_sents_g
     test_sents_g = test_sents_b
 else:
     print("wrong dataset as test selected. Please specify- g or b")
@@ -241,7 +242,7 @@ ppxty_1_g =np.exp(-logP_1_g/comb_total)
 
 # In[]
     
-# bigram perplexity test data
+# bigram perplexity on test data
 logP_2_g = 0;
 comb_total = 0;
 for sents in test_sents_g_aug:
@@ -336,7 +337,14 @@ start_ws_old=start_ws;
 gen_sent = []
 gen_sent.append(start_ws[0])
 gen_sent.append(start_ws[1])
-keys_temp =list( P_KN_3.keys())
+
+keys_temp1 =list( P_KN_3.keys())
+keys_temp=[]
+for key in keys_temp1:
+    if not ((key[0]=='UNK') | (key[1]=='UNK') | (key[2]=='UNK')):
+        keys_temp.append(key)
+
+#keys_temp =list( P_KN_3.keys())
 val_temp = []
 for key in keys_temp:
     val_temp.append(P_KN_3[key])
