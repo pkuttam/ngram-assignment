@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb  8 16:52:55 2018
+Created on Thu Feb  7 10:01:23 2018
 
 @author: pk.uttam
 """
@@ -19,7 +19,7 @@ from nltk.corpus import brown
 # For only gutenberg as train data-> select select_train = "g"
 # For only brown as train data-> select select_train = "b"
 # For gutenberg and brown as train data-> select select_train = "gb"
-select_train = "gb"
+select_train = "b"
 # For gutenberg as train data-> select select_train = "g"
 # For brown as train data-> select select_train = "b"
 select_test = "b"
@@ -93,18 +93,19 @@ elif select_test=="b":
 else:
     print("wrong dataset as test selected. Please specify- g or b")
 
-
 # In[]
 train_words_g = list(itertools.chain.from_iterable(train_sents_g))
+
 ngram_1_g = {}
 
-# gutenberg uni-gram freq count
+#  uni-gram freq count
 for word in train_words_g:
     key = word
     if key in ngram_1_g:
         ngram_1_g[key]=ngram_1_g[key] +1 
     elif key not in ngram_1_g:
         ngram_1_g[key]=1
+
 
 # In[]
 ## UNK tag
@@ -114,7 +115,9 @@ key_ngram_1_g = list(ngram_1_g.keys())
 
 ngram_1_g_aug = dict(ngram_1_g)
 
+
 ngram_1_g_aug['UNK'] = 0
+
 
 for word in key_ngram_1_g:
     if ngram_1_g[word]<=max_freq:
@@ -124,7 +127,7 @@ for word in key_ngram_1_g:
 
 
 # In[]
-# gutenberg sentence augmentation/normalization
+# sentence augmentation/normalization
 
 train_sents_g_aug = []
 for sents in train_sents_g:
@@ -134,7 +137,7 @@ for sents in train_sents_g:
 
 
 # In[]
-# Bigram count for gutenberg
+# Bigram count 
 ngram_2_g_aug={}
 for sents in train_sents_g_aug:
     length = len(sents)
@@ -145,8 +148,9 @@ for sents in train_sents_g_aug:
         else:
             ngram_2_g_aug[key] = 1
 
+
 # In[]
-# trigram count for gutenberg
+# trigram count 
 ngram_3_g_aug={}
 for sents in train_sents_g_aug:
     length = len(sents)
@@ -158,69 +162,75 @@ for sents in train_sents_g_aug:
             ngram_3_g_aug[key] = 1
 
 
+
 # In[]
 
 # All existing key in dictionary . Those which doesn't exit and exist keynser smoothing
 keys_ngram_1_g_aug =list( ngram_1_g_aug.keys())
-
 keys_ngram_2_g_aug =list( ngram_2_g_aug.keys())
-
 keys_ngram_3_g_aug =list( ngram_3_g_aug.keys())
-
 
 
 
 # In[]
 
-# test data gutenberg sentence augmentation/normalization
+# propbability for unigram model with add-K smoothing
+n_key_1_g_aug = len(keys_ngram_1_g_aug) 
+p_key_1_g_aug= {}
+values_ngram_1_g_aug = list(ngram_1_g_aug.values())
+n_total = np.sum(values_ngram_1_g_aug)
+
+for i in range(0,n_key_1_g_aug):
+    key = keys_ngram_1_g_aug[i]
+    p_key_1_g_aug[key] = ngram_1_g_aug[key]/n_total
+
+
+# In[]
+    # add-K smoothing constant
+k = 0.001;
+
+# probability with add-K smoothing
+n_key_2_g_aug = len(keys_ngram_2_g_aug) 
+p_key_2_g_aug= {}
+p_not_key_2_g_aug={} # those which doesn't in dictionary -constant value
+for i in range(0,n_key_2_g_aug):
+    key = keys_ngram_2_g_aug[i]
+    p_key_2_g_aug[key] =  (ngram_2_g_aug[key]+k)/(ngram_1_g_aug[key[0]]+k*n_key_1_g_aug)
+
+for i in range(0,n_key_1_g_aug):
+    key = keys_ngram_1_g_aug[i]
+    p_not_key_2_g_aug[key]= k/(ngram_1_g_aug[key]+k*n_key_1_g_aug)
+
+
+# In[]
+# add-K smoothing constant
+k = 0.001;
+# probability ngram-3 with add-K smoothing
+n_key_3_g_aug = len(keys_ngram_3_g_aug) 
+p_key_3_g_aug= {}
+p_not_key_3_g_aug={} # those which doesn't in dictionary -constant value
+for i in range(0,n_key_3_g_aug):
+    key = keys_ngram_3_g_aug[i]
+    p_key_3_g_aug[key] =  (ngram_3_g_aug[key]+k)/(ngram_2_g_aug[key[0:2]]+k*n_key_1_g_aug**2)
+
+for i in range(0,n_key_2_g_aug):
+    key = keys_ngram_2_g_aug[i]
+    p_not_key_3_g_aug[key]= k/(ngram_2_g_aug[key]+k*n_key_1_g_aug**2)
+
+
+
+# In[]
+
+# test data sentence augmentation/normalization
 
 test_sents_g_aug = []
 for sents in test_sents_g:
     sent_chnge =[ x if x in ngram_1_g_aug else 'UNK' for x in sents] 
     test_sents_g_aug.append(sent_chnge)
 
-# In[]
-
-#KN for unigram
-d = 0.75
-
-# unigram continuation - All the unique count of word before w/ total biagram count
-P_CN_1_g_nemu = {} # all unique count of w at place 2 n bigram dictionary
-P_CN_1_g = {}
-num_unique_bigrams = len(keys_ngram_1_g_aug)
-
-for key2 in keys_ngram_2_g_aug:
-    if key2[1] in P_CN_1_g_nemu:
-        P_CN_1_g_nemu[key2[1]] = P_CN_1_g_nemu[key2[1]] + 1
-    else:
-        P_CN_1_g_nemu[key2[1]] = 1
-
-for key in P_CN_1_g_nemu:
-    P_CN_1_g[key] =   P_CN_1_g_nemu[key]*1.0/num_unique_bigrams
-      
-
-
-# unigram lamda
-lamda_1_g_nemu = {}
-for key2 in keys_ngram_2_g_aug:
-    if key2[0] in lamda_1_g_nemu:
-        lamda_1_g_nemu[key2[0]] = lamda_1_g_nemu[key2[0]] + 1
-    else:
-        lamda_1_g_nemu[key2[0]] =  1
-
-lamda_1_g={}
-for key in lamda_1_g_nemu:
-    lamda_1_g[key] = d*lamda_1_g_nemu[key]*1.0/ngram_1_g_aug[key]
-
-
-# probability KN
-P_KN_2_g = {}
-for key2 in keys_ngram_2_g_aug:
-    P_KN_2_g[key2] = (ngram_2_g_aug[key2] -d)/ngram_1_g_aug[key2[0]] + lamda_1_g[key2[0]]*P_CN_1_g[key2[1]]
-
 
 # In[]
-# unigram perplexity
+# unigram perplexity on test data
 logP_1_g = 0;
 comb_total = 0;
 for sents in test_sents_g_aug:
@@ -228,19 +238,14 @@ for sents in test_sents_g_aug:
     for i in range(0,length):
         comb_total = comb_total+1
         key = sents[i]
-        prob = P_CN_1_g[key]
-        logP_1_g = logP_1_g + np.log(prob)
-
-
+        if key in ngram_1_g_aug:
+            logP_1_g = logP_1_g + np.log(p_key_1_g_aug[key])
 
 ppxty_1_g =np.exp(-logP_1_g/comb_total)
-#print("unigram perplexity = "+ str(np.floor(ppxty_1_g)))
-
-
-
+print("unigram perplexity = "+ str(np.floor(ppxty_1_g)))
 # In[]
-    
-# bigram perplexity on gutenberg test data
+
+# bigram perplexity on test data
 logP_2_g = 0;
 comb_total = 0;
 for sents in test_sents_g_aug:
@@ -249,59 +254,31 @@ for sents in test_sents_g_aug:
         comb_total = comb_total+1
         key = (sents[i],sents[i+1])
         if key in ngram_2_g_aug:
-            prob = (ngram_2_g_aug[key] -d)/ngram_1_g_aug[key[0]] + lamda_1_g[key[0]]*P_CN_1_g[key[1]]
-            logP_2_g = logP_2_g + np.log(prob)
+            logP_2_g = logP_2_g + np.log(p_key_2_g_aug[key])
         else:
-            prob = lamda_1_g[key[0]]*P_CN_1_g[key[1]]
-            logP_2_g = logP_2_g + np.log(prob)
+            key_chk = sents[i]
+            logP_2_g = logP_2_g + np.log(p_not_key_2_g_aug[key_chk])
 
 ppxty_2_g =np.exp(-logP_2_g/comb_total)
 print("bigram perplexity = "+ str(np.floor(ppxty_2_g)))
 
-
-
 # In[]
 
-# KN for trigram
-# bigram lamda
-lamda_2_g_nemu = {}
-for key3 in keys_ngram_3_g_aug:
-    if key3[0:2] in lamda_2_g_nemu:
-        lamda_2_g_nemu[key3[0:2]] = lamda_2_g_nemu[key3[0:2]] + 1
-    else:
-        lamda_2_g_nemu[key3[0:2]] =  1
-
-lamda_2_g={}
-for key2 in lamda_2_g_nemu:
-    lamda_2_g[key2] = d*lamda_2_g_nemu[key2]*1.0/ngram_2_g_aug[key2]
-
-
-def P_KN_3_g(key3):
-    if key3 in ngram_3_g_aug:
-        prob = (ngram_3_g_aug[key3]-d)/ngram_2_g_aug[key3[0:2]] +lamda_2_g[key3[0:2]]*P_KN_2_g[key3[1:3]]
-    else:
-        key2 = key3[1:3]
-        if (key2 in ngram_2_g_aug) & (key3[0:2] in lamda_2_g):
-            prob = lamda_2_g[key3[0:2]]*P_KN_2_g[key3[1:3]]
-        else:
-            prob = lamda_1_g[key2[0]]*P_CN_1_g[key2[1]]
-    return prob
-
-P_KN_3 ={}
-for key3 in keys_ngram_3_g_aug:
-    P_KN_3[key3] = P_KN_3_g(key3)
-
-# In[]
-
+# trigram perplexicity on test data
 logP_3_g = 0;
 comb_total = 0;
-for sents in test_sents_g_aug:
+for sents in test_sents_g:
     length = len(sents)
     for i in range(0,length-2):
         comb_total = comb_total+1
         key = (sents[i],sents[i+1],sents[i+2])
-        prob = P_KN_3_g(key)
-        logP_3_g = logP_3_g + np.log(prob)
+        key2 =(sents[i],sents[i+1]) 
+        if key in ngram_3_g_aug:
+            logP_3_g = logP_3_g + np.log(p_key_3_g_aug[key])
+        elif key2 in p_not_key_3_g_aug:
+            logP_3_g = logP_3_g + np.log(p_not_key_3_g_aug[key2])
+        else:
+            logP_3_g = logP_3_g + np.log(1/(n_key_1_g_aug**2))
 
 ppxty_3_g =np.exp(-logP_3_g/comb_total)
 print("trigram perplexity = "+ str(np.floor(ppxty_3_g)))
@@ -311,34 +288,31 @@ print("trigram perplexity = "+ str(np.floor(ppxty_3_g)))
 # generating trigram sentence
 
 # in one keyword it will take bigram probability
-start_ws = ["extra"]
+start_ws = ["i"]
 ws = input("give a key word:--")
 start_ws=[ws]
 key_bi =[]
 val_bi =[]
-for key in P_KN_2_g:
+for key in p_key_2_g_aug:
     if key[0]==start_ws[0]:
         key_bi.append(key[1])
-        val_bi.append(P_KN_2_g[key])
+        val_bi.append(p_key_2_g_aug[key])
 if not len(val_bi) ==0:
     amx_val = np.argmax(val_bi)
     start_ws.append(key_bi[amx_val])
 else:
     print("word doesn't exit. selecting start word as i")
     start_ws = ["i","am"]
-
-amx_val = np.argmax(val_bi)
-start_ws.append(key_bi[amx_val])
         
 #start_ws = ["i","was"]
 start_ws_old=start_ws;
 gen_sent = []
 gen_sent.append(start_ws[0])
 gen_sent.append(start_ws[1])
-keys_temp =list( P_KN_3.keys())
+keys_temp =list( p_key_3_g_aug.keys())
 val_temp = []
 for key in keys_temp:
-    val_temp.append(P_KN_3[key])
+    val_temp.append(p_key_3_g_aug[key])
 
 
 print("trigram Generated sentence is:")
@@ -354,6 +328,7 @@ while(True):
     if len(val_sel)==0:
         print("trigram pair for this bigram doesn't exist")
         break;
+        
     ind_max = key_sel[np.argmax(val_sel)]
     pred_word = keys_temp[ind_max][2]
     gen_sent.append(pred_word)
@@ -375,4 +350,6 @@ for i in range(0,len(gen_sent)):
         
 print(' '.join(filtered_sent))
             
+
+
 
